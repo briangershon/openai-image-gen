@@ -42,28 +42,27 @@ def get_api_key() -> str:
         API key string
 
     Raises:
-        RuntimeError: If API key cannot be found
+        RuntimeError: If API key cannot be found or read
     """
     secret_path = "/run/secrets/openai_api_key"
 
-    # Try Docker secret first
-    if os.path.exists(secret_path):
-        try:
-            with open(secret_path, "r") as f:
-                api_key = f.read().strip()
-                if api_key:
-                    logger.info("Loaded API key from Docker secret")
-                    return api_key
-        except Exception as e:
-            logger.error(f"Failed to read Docker secret: {e}")
+    # Check if Docker secret exists
+    if not os.path.exists(secret_path):
+        raise RuntimeError(
+            "OpenAI API key not found. Docker secret 'openai_api_key' must be configured.\n"
+            "See README.md for setup instructions."
+        )
 
-    # Fallback to environment variable (for local development)
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
-    if api_key:
-        logger.info("Loaded API key from environment variable")
-        return api_key
-
-    raise RuntimeError("OpenAI API key not found in Docker secret or environment")
+    # Read the secret
+    try:
+        with open(secret_path, "r") as f:
+            api_key = f.read().strip()
+            if not api_key:
+                raise RuntimeError("OpenAI API key secret exists but is empty")
+            logger.info("Loaded API key from Docker secret")
+            return api_key
+    except Exception as e:
+        raise RuntimeError(f"Failed to read Docker secret: {e}")
 
 
 # Initialize API key and generator

@@ -17,10 +17,10 @@ A production-ready Flask REST API for OpenAI DALL-E image generation, running in
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+- Docker and Docker Compose v1.27+ (for secrets support)
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
 
-### Installation
+### Local Development
 
 1. **Clone the repository**
 
@@ -29,38 +29,56 @@ A production-ready Flask REST API for OpenAI DALL-E image generation, running in
    cd openai-image-gen
    ```
 
-2. **Set your OpenAI API key**
-
+2. **Create secrets directory:**
    ```bash
-   echo "OPENAI_API_KEY=sk-proj-your-key-here" > .env
+   mkdir -p secrets
    ```
 
-3. **Start the service**
-
+3. **Add your OpenAI API key:**
    ```bash
-   docker-compose up -d
+   echo "sk-proj-your-actual-key-here" > secrets/openai_api_key.txt
+   chmod 600 secrets/openai_api_key.txt
    ```
 
-4. **Test the service**
+4. **Build and run:**
    ```bash
-   curl http://localhost:5000/health
+   docker compose up --build
    ```
 
-That's it! The service is now running at `http://localhost:5000`.
+5. **Access the application:**
+   Open http://localhost:5000
+
+### Production Deployment with Docker Swarm
+
+1. **Create Docker secret:**
+   ```bash
+   echo "your-production-key" | docker secret create openai_api_key -
+   ```
+
+2. **Update docker-compose.yml for production:**
+   Change the secrets section to use external secret:
+   ```yaml
+   secrets:
+     openai_api_key:
+       external: true
+   ```
+
+3. **Deploy stack:**
+   ```bash
+   docker stack deploy -c docker-compose.yml image-gen-stack
+   ```
 
 ### Using Pre-built Image
 
 Pull and run the pre-built image from GitHub Container Registry:
 
+**Note:** For Docker secrets support with `docker run`, you need to use Docker Swarm mode. For standalone containers, use docker-compose as shown above.
+
 ```bash
 docker pull ghcr.io/briangershon/openai-image-gen:latest
 
-docker run -d \
-  -p 5000:5000 \
-  -e OPENAI_API_KEY=your-key-here \
-  -v $(pwd)/images:/app/images-host \
-  --name openai-image-gen \
-  ghcr.io/briangershon/openai-image-gen:latest
+# For local testing with docker-compose
+# Follow the "Local Development" instructions above
 ```
 
 ## API Reference
@@ -214,17 +232,20 @@ curl http://localhost:5000/images/$IMAGE_ID --output sunset.png
 
 ## Configuration
 
-### Environment Variables
+### Docker Secrets
 
-| Variable         | Required | Description         | Default |
-| ---------------- | -------- | ------------------- | ------- |
-| `OPENAI_API_KEY` | Yes      | Your OpenAI API key | None    |
+| Secret             | Required | Description         | Location                          |
+| ------------------ | -------- | ------------------- | --------------------------------- |
+| `openai_api_key`   | Yes      | Your OpenAI API key | `/run/secrets/openai_api_key`     |
+
+The application reads the OpenAI API key exclusively from Docker secrets for enhanced security.
 
 ### Docker Compose Configuration
 
 The `docker-compose.yml` file includes:
 
 - **Port Mapping**: Exposes port 5000 to host
+- **Secrets**: Configured to mount `./secrets/openai_api_key.txt` as Docker secret
 - **Volume Mounts**:
   - Named volume `image-data` for persistent storage
   - Bind mount `./images` for easy host access
@@ -286,14 +307,19 @@ docker run -d \
 
 ### Local Development Without Docker
 
+**Note:** The application requires Docker secrets. For development without Docker, you'll need to modify the code to read from environment variables or use Docker Compose as shown above.
+
+If you need to run without Docker for testing:
+
 ```bash
 cd image-gen
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set API key
-export OPENAI_API_KEY=your-key-here
+# Create a mock secrets directory
+mkdir -p /run/secrets
+echo "your-api-key-here" > /run/secrets/openai_api_key
 
 # Run with Flask development server
 flask run --host=0.0.0.0 --port=5000
@@ -323,7 +349,7 @@ ls -lh images/
 - ✅ **No Privilege Escalation** - `no-new-privileges:true` security option
 - ✅ **Input Validation** - All request parameters validated and sanitized
 - ✅ **Path Traversal Prevention** - Image IDs sanitized before file access
-- ✅ **Environment-based Secrets** - API key from environment, not hardcoded
+- ✅ **Docker Secrets** - API key from Docker secrets, never in environment variables
 - ✅ **Isolated Temp Files** - Temporary files in isolated tmpfs mount
 - ✅ **Minimal Dependencies** - Only Flask, Werkzeug, and Gunicorn required
 - ✅ **No OpenAI SDK** - Uses stdlib urllib for minimal attack surface
@@ -375,12 +401,23 @@ Verify your API key is configured correctly:
 # Check health endpoint
 curl http://localhost:5000/health
 
-# If api_key_configured is false, check your .env file
-cat .env
+# If api_key_configured is false, check your secrets file
+cat secrets/openai_api_key.txt
+
+# Verify the secret is mounted correctly
+docker compose exec openai-image-gen cat /run/secrets/openai_api_key
 
 # Restart after fixing
-docker-compose restart openai-image-gen
+docker compose restart openai-image-gen
 ```
+
+**Error: "OpenAI API key not found"**
+- Development: Ensure `secrets/openai_api_key.txt` exists and is not empty
+- Production: Verify Docker secret exists with `docker secret ls`
+
+**Permission denied reading secret:**
+- Check file permissions: `chmod 600 secrets/openai_api_key.txt`
+- Ensure Docker has access to the secrets directory
 
 ### Image Generation Fails
 

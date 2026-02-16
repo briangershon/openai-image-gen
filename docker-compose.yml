@@ -6,8 +6,8 @@ services:
     container_name: openai-image-gen
     ports:
       - "5000:5000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    secrets:
+      - openai_api_key
     volumes:
       - image-data:/app/images
       - ./images:/app/images-host
@@ -16,6 +16,10 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp
+
+secrets:
+  openai_api_key:
+    file: ./secrets/openai_api_key.txt
 
 volumes:
   image-data:
