@@ -30,17 +30,20 @@ A production-ready Flask REST API for OpenAI DALL-E image generation, running in
    ```
 
 2. **Create secrets directory:**
+
    ```bash
    mkdir -p secrets
    ```
 
 3. **Add your OpenAI API key:**
+
    ```bash
    echo "sk-proj-your-actual-key-here" > secrets/openai_api_key.txt
    chmod 600 secrets/openai_api_key.txt
    ```
 
 4. **Build and run:**
+
    ```bash
    docker compose up --build
    ```
@@ -51,12 +54,14 @@ A production-ready Flask REST API for OpenAI DALL-E image generation, running in
 ### Production Deployment with Docker Swarm
 
 1. **Create Docker secret:**
+
    ```bash
    echo "your-production-key" | docker secret create openai_api_key -
    ```
 
 2. **Update docker-compose.yml for production:**
    Change the secrets section to use external secret:
+
    ```yaml
    secrets:
      openai_api_key:
@@ -91,6 +96,12 @@ Check service status and API key configuration:
 GET /health
 ```
 
+**Example:**
+
+```bash
+curl http://localhost:5000/health
+```
+
 **Response:**
 
 ```json
@@ -107,8 +118,17 @@ Generate one or more images from a text prompt:
 
 ```bash
 POST /generate
-Content-Type: application/json
+```
 
+**Example:**
+
+```bash
+curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"A serene mountain landscape at sunset","count":1,"model":"dall-e-3","size":"1024x1024","quality":"standard","style":"vivid"}'
+```
+
+**Request body format:**
+
+```json
 {
   "prompt": "A serene mountain landscape at sunset",
   "count": 1,
@@ -150,8 +170,7 @@ Returns: Binary PNG image data
 **Example:**
 
 ```bash
-curl http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7 \
-  --output myimage.png
+curl http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7 --output myimage.png
 ```
 
 ### Delete Image
@@ -160,6 +179,12 @@ Remove a generated image:
 
 ```bash
 DELETE /images/<image_id>
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7
 ```
 
 **Response:**
@@ -176,42 +201,23 @@ DELETE /images/<image_id>
 ### Generate HD Quality Image (DALL-E 3)
 
 ```bash
-curl -X POST http://localhost:5000/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "A photorealistic portrait of a wise old tree",
-    "model": "dall-e-3",
-    "size": "1024x1792",
-    "quality": "hd",
-    "style": "natural"
-  }'
+curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"A photorealistic portrait of a wise old tree","model":"dall-e-3","size":"1024x1792","quality":"hd","style":"natural"}'
 ```
 
 ### Generate Multiple Variations (DALL-E 2)
 
 ```bash
-curl -X POST http://localhost:5000/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Abstract geometric patterns",
-    "count": 4,
-    "model": "dall-e-2",
-    "size": "512x512"
-  }'
+curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Abstract geometric patterns","count":4,"model":"dall-e-2","size":"512x512"}'
 ```
 
 ### Download and Save Image
 
 ```bash
-# Generate image and extract ID
-RESPONSE=$(curl -s -X POST http://localhost:5000/generate \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Beautiful sunset", "model": "dall-e-2"}')
+# Generate image and save response
+curl -s -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Beautiful sunset","model":"dall-e-2"}' > response.json
 
-IMAGE_ID=$(echo $RESPONSE | jq -r '.images[0].id')
-
-# Download the image
-curl http://localhost:5000/images/$IMAGE_ID --output sunset.png
+# Extract image ID and download
+curl http://localhost:5000/images/$(jq -r '.images[0].id' response.json) --output sunset.png
 ```
 
 ## Model-Specific Parameters
@@ -234,9 +240,9 @@ curl http://localhost:5000/images/$IMAGE_ID --output sunset.png
 
 ### Docker Secrets
 
-| Secret             | Required | Description         | Location                          |
-| ------------------ | -------- | ------------------- | --------------------------------- |
-| `openai_api_key`   | Yes      | Your OpenAI API key | `/run/secrets/openai_api_key`     |
+| Secret           | Required | Description         | Location                      |
+| ---------------- | -------- | ------------------- | ----------------------------- |
+| `openai_api_key` | Yes      | Your OpenAI API key | `/run/secrets/openai_api_key` |
 
 The application reads the OpenAI API key exclusively from Docker secrets for enhanced security.
 
@@ -335,9 +341,7 @@ gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 app:app
 curl http://localhost:5000/health
 
 # Generate test image
-curl -X POST http://localhost:5000/generate \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Test image", "model": "dall-e-2", "size": "256x256"}'
+curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Test image","model":"dall-e-2","size":"256x256"}'
 
 # Verify image was saved
 ls -lh images/
@@ -412,10 +416,12 @@ docker compose restart openai-image-gen
 ```
 
 **Error: "OpenAI API key not found"**
+
 - Development: Ensure `secrets/openai_api_key.txt` exists and is not empty
 - Production: Verify Docker secret exists with `docker secret ls`
 
 **Permission denied reading secret:**
+
 - Check file permissions: `chmod 600 secrets/openai_api_key.txt`
 - Ensure Docker has access to the secrets directory
 

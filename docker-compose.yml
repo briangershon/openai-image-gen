@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   openai-image-gen:
     build: .
@@ -10,7 +8,7 @@ services:
       - openai_api_key
     volumes:
       - image-data:/app/images
-      - ./images:/app/images-host
+      - ./images:/app/images
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
