@@ -1,6 +1,12 @@
 # OpenAI Image Generation Service
 
-A production-ready Flask REST API for OpenAI DALL-E image generation, running in an isolated Docker container. Generate high-quality images using DALL-E 2 and DALL-E 3 models through a simple HTTP API.
+Generate high-quality images using DALL-E 2 and DALL-E 3 models through a simple HTTP API.
+
+Hosted in a Docker container. Use with Docker Compose for easy integration with other services.
+
+Useful for LLM agents that need to generate images as part of their workflows without needing direct access to the OpenAI API key.
+
+Here's an example "agent" project that uses this service so that agent doesn't have direct access to credentials: [agent-tools-at-arms-length](https://github.com/briangershon/agent-tools-at-arms-length)
 
 ## Features
 
