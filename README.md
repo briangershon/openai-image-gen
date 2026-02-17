@@ -29,13 +29,13 @@ This repository includes a skill file that documents how to use the REST API for
 2. **Verify service is healthy:**
 
    ```bash
-   curl http://localhost:5000/health
+   curl http://localhost:3000/health
    ```
 
 3. **Generate an image:**
 
    ```bash
-   curl -X POST http://localhost:5000/generate \
+   curl -X POST http://localhost:3000/generate \
      -H "Content-Type: application/json" \
      -d '{"prompt": "A serene mountain landscape", "model": "dall-e-3"}'
    ```
@@ -43,7 +43,7 @@ This repository includes a skill file that documents how to use the REST API for
 4. **Download generated image:**
    ```bash
    # Extract image ID from response and download
-   curl http://localhost:5000/images/{image_id} --output image.png
+   curl http://localhost:3000/images/{image_id} --output image.png
    ```
 
 For complete API documentation, curl examples, and troubleshooting, see [SKILL.md](SKILL.md).
@@ -95,7 +95,7 @@ For complete API documentation, curl examples, and troubleshooting, see [SKILL.m
    ```
 
 5. **Access the application:**
-   Open http://localhost:5000
+   Open http://localhost:3000
 
 ### Production Deployment with Docker Swarm
 
@@ -145,7 +145,7 @@ GET /health
 **Example:**
 
 ```bash
-curl http://localhost:5000/health
+curl http://localhost:3000/health
 ```
 
 **Response:**
@@ -169,7 +169,7 @@ POST /generate
 **Example:**
 
 ```bash
-curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"A serene mountain landscape at sunset","count":1,"model":"dall-e-3","size":"1024x1024","quality":"standard","style":"vivid"}'
+curl -X POST http://localhost:3000/generate -H "Content-Type: application/json" -d '{"prompt":"A serene mountain landscape at sunset","count":1,"model":"dall-e-3","size":"1024x1024","quality":"standard","style":"vivid"}'
 ```
 
 **Request body format:**
@@ -216,7 +216,7 @@ Returns: Binary PNG image data
 **Example:**
 
 ```bash
-curl http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7 --output myimage.png
+curl http://localhost:3000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7 --output myimage.png
 ```
 
 ### Delete Image
@@ -230,7 +230,7 @@ DELETE /images/<image_id>
 **Example:**
 
 ```bash
-curl -X DELETE http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7
+curl -X DELETE http://localhost:3000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7
 ```
 
 **Response:**
@@ -247,23 +247,23 @@ curl -X DELETE http://localhost:5000/images/7c9e6679-7425-40de-944b-e07fc1f90ae7
 ### Generate HD Quality Image (DALL-E 3)
 
 ```bash
-curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"A photorealistic portrait of a wise old tree","model":"dall-e-3","size":"1024x1792","quality":"hd","style":"natural"}'
+curl -X POST http://localhost:3000/generate -H "Content-Type: application/json" -d '{"prompt":"A photorealistic portrait of a wise old tree","model":"dall-e-3","size":"1024x1792","quality":"hd","style":"natural"}'
 ```
 
 ### Generate Multiple Variations (DALL-E 2)
 
 ```bash
-curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Abstract geometric patterns","count":4,"model":"dall-e-2","size":"512x512"}'
+curl -X POST http://localhost:3000/generate -H "Content-Type: application/json" -d '{"prompt":"Abstract geometric patterns","count":4,"model":"dall-e-2","size":"512x512"}'
 ```
 
 ### Download and Save Image
 
 ```bash
 # Generate image and save response
-curl -s -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Beautiful sunset","model":"dall-e-2"}' > response.json
+curl -s -X POST http://localhost:3000/generate -H "Content-Type: application/json" -d '{"prompt":"Beautiful sunset","model":"dall-e-2"}' > response.json
 
 # Extract image ID and download
-curl http://localhost:5000/images/$(jq -r '.images[0].id' response.json) --output sunset.png
+curl http://localhost:3000/images/$(jq -r '.images[0].id' response.json) --output sunset.png
 ```
 
 ## Model-Specific Parameters
@@ -296,7 +296,7 @@ The application reads the OpenAI API key exclusively from Docker secrets for enh
 
 The `docker-compose.yml` file includes:
 
-- **Port Mapping**: Exposes port 5000 to host
+- **Port Mapping**: Exposes port 5000 to host as 3000
 - **Secrets**: Configured to mount `./secrets/openai_api_key.txt` as Docker secret
 - **Volume Mounts**:
   - Named volume `image-data` for persistent storage
@@ -325,38 +325,6 @@ Each job creates a directory containing all generated images and a metadata file
 
 ## Development
 
-### Project Structure
-
-```
-openai-image-gen/
-├── Dockerfile              # Container definition
-├── docker-compose.yml      # Compose configuration
-├── .dockerignore          # Build optimization
-├── image-gen/             # Application code
-│   ├── app.py            # Flask REST API
-│   ├── image_generator.py # OpenAI integration
-│   └── requirements.txt   # Python dependencies
-├── .github/
-│   └── workflows/
-│       └── docker-publish.yml  # CI/CD pipeline
-└── images/                # Generated images (host mount)
-```
-
-### Building Locally
-
-```bash
-# Build the image
-docker build -t openai-image-gen .
-
-# Run the container
-docker run -d \
-  -p 5000:5000 \
-  -e OPENAI_API_KEY=your-key-here \
-  -v $(pwd)/images:/app/images-host \
-  --name openai-image-gen \
-  openai-image-gen
-```
-
 ### Local Development Without Docker
 
 **Note:** The application requires Docker secrets. For development without Docker, you'll need to modify the code to read from environment variables or use Docker Compose as shown above.
@@ -384,10 +352,10 @@ gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 app:app
 
 ```bash
 # Health check
-curl http://localhost:5000/health
+curl http://localhost:3000/health
 
 # Generate test image
-curl -X POST http://localhost:5000/generate -H "Content-Type: application/json" -d '{"prompt":"Test image","model":"dall-e-2","size":"256x256"}'
+curl -X POST http://localhost:3000/generate -H "Content-Type: application/json" -d '{"prompt":"Test image","model":"dall-e-2","size":"256x256"}'
 
 # Verify image was saved
 ls -lh images/
@@ -449,7 +417,7 @@ Verify your API key is configured correctly:
 
 ```bash
 # Check health endpoint
-curl http://localhost:5000/health
+curl http://localhost:3000/health
 
 # If api_key_configured is false, check your secrets file
 cat secrets/openai_api_key.txt

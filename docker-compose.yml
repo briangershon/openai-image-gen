@@ -3,7 +3,7 @@ services:
     build: .
     container_name: openai-image-gen
     ports:
-      - "5000:5000"
+      - "3000:5000"
     secrets:
       - openai_api_key
     volumes:
