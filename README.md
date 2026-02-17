@@ -6,7 +6,13 @@ Hosted in a Docker container. Use with Docker Compose for easy integration with 
 
 Useful for LLM agents that need to generate images as part of their workflows without needing direct access to the OpenAI API key.
 
-Here's an example "agent" project that uses this service so that agent doesn't have direct access to credentials: [agent-tools-at-arms-length](https://github.com/briangershon/agent-tools-at-arms-length)
+This was created by starting with the [OpenClaw image generation skill](https://github.com/openclaw/openclaw/tree/main/skills/openai-image-gen), then wrapped with an HTTP API and hosted in a Docker container. Goal was to demonstrate running a service securely without sharing credentials with the agent.
+
+## Use in your own projects
+
+- Check out the [agent-tools-at-arms-length](https://github.com/briangershon/agent-tools-at-arms-length) project for an example of how to use this service in an LLM agent without giving the agent direct access to your OpenAI API key.
+- Docker image is hosted at `ghcr.io/briangershon/openai-image-gen` to use directly with Docker Compose.
+- Install Agent Skill for using this service in your own projects.
 
 ## Features
 
