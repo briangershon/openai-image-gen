@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Install system dependencies (minimal, following agent pattern)
 RUN apt-get update && apt-get install -y --no-install-recommends \
