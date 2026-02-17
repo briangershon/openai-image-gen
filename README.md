@@ -6,7 +6,47 @@ Hosted in a Docker container. Use with Docker Compose for easy integration with 
 
 Useful for LLM agents that need to generate images as part of their workflows without needing direct access to the OpenAI API key.
 
-Here's an example "agent" project that uses this service so that agent doesn't have direct access to credentials: [agent-tools-at-arms-length](https://github.com/briangershon/agent-tools-at-arms-length)
+This was created by starting with the [OpenClaw image generation skill](https://github.com/openclaw/openclaw/tree/main/skills/openai-image-gen), then wrapped with an HTTP API and hosted in a Docker container. Goal was to demonstrate running a service securely without sharing credentials with the agent.
+
+## Use in your own projects
+
+- Check out the [agent-tools-at-arms-length](https://github.com/briangershon/agent-tools-at-arms-length) project for an example of how to use this service in an LLM agent without giving the agent direct access to your OpenAI API key.
+- Docker image is hosted at `ghcr.io/briangershon/openai-image-gen` to use directly with Docker Compose.
+- Install Agent Skill for using this service in your own projects.
+
+## Claude Code Skill
+
+This repository includes a skill file that documents how to use the REST API for image generation. This is useful for Claude Code users who want to integrate image generation capabilities.
+
+### Quick Start
+
+1. **Start the image generation service:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. **Verify service is healthy:**
+
+   ```bash
+   curl http://localhost:5000/health
+   ```
+
+3. **Generate an image:**
+
+   ```bash
+   curl -X POST http://localhost:5000/generate \
+     -H "Content-Type: application/json" \
+     -d '{"prompt": "A serene mountain landscape", "model": "dall-e-3"}'
+   ```
+
+4. **Download generated image:**
+   ```bash
+   # Extract image ID from response and download
+   curl http://localhost:5000/images/{image_id} --output image.png
+   ```
+
+For complete API documentation, curl examples, and troubleshooting, see [SKILL.md](SKILL.md).
 
 ## Features
 
