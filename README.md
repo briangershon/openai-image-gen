@@ -14,6 +14,40 @@ This was created by starting with the [OpenClaw image generation skill](https://
 - Docker image is hosted at `ghcr.io/briangershon/openai-image-gen` to use directly with Docker Compose.
 - Install Agent Skill for using this service in your own projects.
 
+## Claude Code Skill
+
+This repository includes a skill file that documents how to use the REST API for image generation. This is useful for Claude Code users who want to integrate image generation capabilities.
+
+### Quick Start
+
+1. **Start the image generation service:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. **Verify service is healthy:**
+
+   ```bash
+   curl http://localhost:5000/health
+   ```
+
+3. **Generate an image:**
+
+   ```bash
+   curl -X POST http://localhost:5000/generate \
+     -H "Content-Type: application/json" \
+     -d '{"prompt": "A serene mountain landscape", "model": "dall-e-3"}'
+   ```
+
+4. **Download generated image:**
+   ```bash
+   # Extract image ID from response and download
+   curl http://localhost:5000/images/{image_id} --output image.png
+   ```
+
+For complete API documentation, curl examples, and troubleshooting, see [SKILL.md](SKILL.md).
+
 ## Features
 
 - ✅ **RESTful HTTP API** - Simple endpoints for image generation and management
